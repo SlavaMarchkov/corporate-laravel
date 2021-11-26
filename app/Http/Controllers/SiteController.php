@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Repositories\MenuRepository;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Lavary\Menu\Menu;
 
 class SiteController extends Controller
@@ -32,10 +34,44 @@ class SiteController extends Controller
     protected function renderOutput()
     {
         // навигационное меню для всех разделов сайта
-        $menu = $this->getMenu();
-        $navigation = view(config('settings.theme') . '.navigation')
-            ->with('menu', $menu)
-            ->render();
+        // проверяем, есть ли меню в кэше
+        // если есть, то берем его оттуда
+        // если нет, то записываем в ячейку кэша сгенерированное меню
+        // Cache::flush(); // удаляет весь кэш
+        // Cache::forget('menu'); // удаляет одну ячейку кэша
+        /* if (Cache::has('menu')) {
+            $navigation = Cache::get('menu', 'Menu is empty');
+            // $navigation = Cache::pull('menu', 'Menu is empty'); // получает данные из кэша и сразу же удаляет эту ячейку
+        } else {
+            $menu = $this->getMenu();
+            $navigation = view(config('settings.theme') . '.navigation')
+                ->with('menu', $menu)
+                ->render();
+            
+            $time = Carbon::now()->addMinutes(10);
+            Cache::put('menu', $navigation, $time);
+            // Cache::forever('menu', $navigation); // навсегда
+        } */
+
+        // альтернативный вариант #1
+        /* $navigation = Cache::get('menu', function () {
+            $menu = $this->getMenu();
+            $tmp = view(config('settings.theme') . '.navigation')
+                ->with('menu', $menu)
+                ->render();
+            Cache::forever('menu', $tmp);
+
+            return $tmp;
+        }); */
+        
+        // альтернативный вариант #2
+        $navigation = Cache::remember('menu', now()->addMinutes(10), function () {
+            $menu = $this->getMenu();
+            return view(config('settings.theme') . '.navigation')
+                ->with('menu', $menu)
+                ->render();
+        });
+        
         $this->vars['navigation'] = $navigation;
 
         // правый сайдбар
