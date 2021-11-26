@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Repositories\MenuRepository;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Redis;
 use Lavary\Menu\Menu;
 
 class SiteController extends Controller
@@ -71,6 +72,9 @@ class SiteController extends Controller
                 ->with('menu', $menu)
                 ->render();
         });
+
+        // Redis::set('name', 'Slava');
+        dump(Redis::get('name'));
         
         $this->vars['navigation'] = $navigation;
 
